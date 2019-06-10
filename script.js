@@ -41,7 +41,6 @@ async function readEntriesPromise(directoryReader) {
     }
 }
 
-
 async function toImage(file) {
     return new Promise((resolve, reject) => {
         file.file((f) => {
@@ -53,7 +52,6 @@ async function toImage(file) {
                     img.src = reader.result;
                     img.onload = (a) => {
                         resolve(img);
-                        // resolve(reader.result);
                     }
                 }, false);
             });
@@ -63,9 +61,10 @@ async function toImage(file) {
 async function dropHandler(event) {
     event.preventDefault();
     let items = await getAllFileEntries(event.dataTransfer.items);
+    items.sort((a, b) => (a.name > b.name ? 1 : -1))
     return Promise.all(items.map(toImage));
 }
-// https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+
 ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
     document.body.addEventListener(eventName, preventDefaults, false)
 });
@@ -99,11 +98,13 @@ document.body.addEventListener("drop", async function (e) {
     const itemInCol = settings.column;
 
     const items = await dropHandler(e);
+
     const ctx = canvas.getContext('2d');
 
     canvas.width = itemInCol * cell.w;
     canvas.height = Math.ceil(items.length / itemInCol) * cell.h;
     document.body.style.backgroundSize = `${cell.w * 2}px ${cell.h * 2}px`
+
     items.forEach(function (img, index) {
         const col = index % itemInCol;
         const row = Math.floor(index / itemInCol);
@@ -111,6 +112,5 @@ document.body.addEventListener("drop", async function (e) {
         const y = (row * cell.h) + (Math.floor(cell.h - img.height));
         ctx.drawImage(img, x, y, img.width, img.height);
     });
-    console.log(canvas);
 }
     , false);
